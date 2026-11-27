@@ -23,3 +23,15 @@ test('lists devices regardless of how they got to rma', () => {
   store.devices.set('b', { id: 'b', location: 'rma' }); // manual-mark outcome
   assert.deepStrictEqual(rmaList(), ['a', 'b']);
 });
+
+// Through the owners (T1 setter, T2 effect): a carrier return and a manual path both land in the list.
+test('lists devices moved by the carrier path and by the manual setter', () => {
+  require('../src/rma');
+  const { carrierReturned, returned } = require('../src/returns');
+  for (const id of ['d2', 'd1', 'd3']) store.devices.set(id, { id, location: 'stock' });
+  store.parcels.set('pA', { id: 'pA', state: 'shipped', deviceId: 'd2' });
+  store.parcels.set('pB', { id: 'pB', state: 'shipped', deviceId: 'd1' });
+  carrierReturned('pA');
+  returned('pB'); // what markReturned (T3) reaches
+  assert.deepStrictEqual(rmaList(), ['d1', 'd2']);
+});
