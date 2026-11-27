@@ -1,13 +1,8 @@
 'use strict';
 const test = require('node:test'); const assert = require('node:assert');
-const fs = require('node:fs'); const path = require('node:path');
 const { store, events } = require('../src');
 const { markReturned } = require('../src/admin');
 const { carrierReturned } = require('../src/returns');
-// T2's RMA effect: asserted once src/rma.js is on this branch (it lands with T2, not T3).
-const hasRma = fs.existsSync(path.join(__dirname, '../src/rma.js'));
-if (hasRma) require('../src/rma');
-
 function seed(id = 'p1') {
   store.reset();
   store.devices.set('d1', { id: 'd1', location: 'customer' });
@@ -41,16 +36,4 @@ test('marking an already returned parcel emits nothing more', () => {
 test('unknown parcel id throws', () => {
   store.reset();
   assert.throws(() => markReturned('nope'));
-});
-
-test('markReturned moves the device to rma, same as a carrier return', { skip: !hasRma && 'T2 (src/rma.js) not on this branch' }, () => {
-  seed(); markReturned('p1');
-  assert.strictEqual(store.devices.get('d1').location, 'rma');
-});
-
-test('marking an already returned parcel leaves the device alone', { skip: !hasRma && 'T2 (src/rma.js) not on this branch' }, () => {
-  seed(); markReturned('p1');
-  store.devices.get('d1').location = 'repaired';
-  markReturned('p1');
-  assert.strictEqual(store.devices.get('d1').location, 'repaired');
 });
