@@ -28,3 +28,12 @@ test('unknown parcel throws, no emit', () => {
   assert.throws(() => returned('nope'));
   assert.strictEqual(n, 0);
 });
+
+test("'returned' event: payload { parcelId, parcel }, state already set when handlers run (open point 1)", () => {
+  let seen;
+  events.on('returned', (e) => { seen = { e, state: store.parcels.get('p1').state }; });
+  carrierReturned('p1');
+  assert.strictEqual(seen.state, 'returned');
+  assert.strictEqual(seen.e.parcelId, 'p1');
+  assert.strictEqual(seen.e.parcel, store.parcels.get('p1'));
+});
